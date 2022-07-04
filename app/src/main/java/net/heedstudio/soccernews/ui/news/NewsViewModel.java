@@ -1,28 +1,55 @@
 package net.heedstudio.soccernews.ui.news;
 
+import android.util.Log;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import net.heedstudio.soccernews.data.remote.SoccerNewsApi;
 import net.heedstudio.soccernews.domain.News;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+
 public class NewsViewModel extends ViewModel {
 
-    private final MutableLiveData<List<News>> mNews;
+    private final MutableLiveData<List<News>> mNews = new MutableLiveData<>();
+    private final SoccerNewsApi soccerNewsApi;
 
     public NewsViewModel() {
-        mNews = new MutableLiveData<>();
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://hsinhori.github.io/Soccer-News-Api/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
 
-        //TODO Remover mock de notícias
-        List<News> news = new ArrayList<>();
-        news.add(new News("Ferroviária tem desfalque importante","App Nativo Sobre Futebol Feminino com Android Jetpack e Java App Nativo Sobre Futebol Feminino com Android Jetpack e Java"));
-        news.add(new News("Ferrinha joga no sábado","App Nativo Sobre Futebol Feminino com Android Jetpack e Java App Nativo Sobre Futebol Feminino com Android Jetpack e Java"));
-        news.add(new News("Copa do mundo feminina está terminando","App Nativo Sobre Futebol Feminino com Android Jetpack e Java App Nativo Sobre Futebol Feminino com Android Jetpack e Java"));
+        soccerNewsApi = retrofit.create(SoccerNewsApi.class);
+        findNews();
+    }
 
-        mNews.setValue(news);
+    private void findNews() {
+        soccerNewsApi.getNews().enqueue(new Callback<List<News>>() {
+            @Override
+            public void onResponse(Call<List<News>> call, Response<List<News>> response) {
+                if (response.isSuccessful()) {
+                    mNews.setValue(response.body());
+                    Log.d("newsnews", response.body().toString());
+                } else {
+                    //TODO pensar em uma estratégia de tratamento de erros
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<News>> call, Throwable t) {
+                //TODO pensar em uma estratégia de tratamento de erros
+            }
+        });
     }
 
     public LiveData<List<News>> getNews() {
