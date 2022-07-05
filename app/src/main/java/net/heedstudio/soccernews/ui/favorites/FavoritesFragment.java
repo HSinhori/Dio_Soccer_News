@@ -20,10 +20,11 @@ import java.util.List;
 public class FavoritesFragment extends Fragment {
 
     private FragmentFavoritesBinding binding;
+    private FavoritesViewModel favoritesViewModel;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        FavoritesViewModel dashboardViewModel =
+        favoritesViewModel =
                 new ViewModelProvider(this).get(FavoritesViewModel.class);
 
         binding = FragmentFavoritesBinding.inflate(inflater, container, false);
@@ -34,15 +35,13 @@ public class FavoritesFragment extends Fragment {
     }
 
     private void loadFavoriteNews() {
-        MainActivity activity = (MainActivity) getActivity();
-        if(activity != null) {
-            List<News> favoriteNews = activity.getDB().newsDao().loadFavoriteNews();
+        favoritesViewModel.loadFavoriteNews().observe(getViewLifecycleOwner(), localNews -> {
             binding.rvFavorites.setLayoutManager(new LinearLayoutManager(getContext()));
-            binding.rvFavorites.setAdapter(new NewsAdapter(favoriteNews, updateNews -> {
-                activity.getDB().newsDao().save(updateNews);
+            binding.rvFavorites.setAdapter(new NewsAdapter(localNews, updateNews -> {
+                favoritesViewModel.saveNews(updateNews);
                 loadFavoriteNews();
             }));
-        }
+        });
     }
 
     @Override

@@ -6,4 +6,5 @@
     <string name="news_image">news image</string>
     <string name="favorite_icon">favorite icon</string>
     <string name="share_icon">share icon</string>
+    <string name="network_error">Network Error</string>
 </resources>
