@@ -1,11 +1,14 @@
 package net.heedstudio.soccernews.ui.news;
 
+import android.app.Application;
 import android.util.Log;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
+import androidx.room.Room;
 
+import net.heedstudio.soccernews.data.local.AppDatabase;
 import net.heedstudio.soccernews.data.remote.SoccerNewsApi;
 import net.heedstudio.soccernews.domain.News;
 
@@ -20,7 +23,12 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class NewsViewModel extends ViewModel {
 
+    public enum State {
+        DOING, DONE, ERROR
+    }
+
     private final MutableLiveData<List<News>> mNews = new MutableLiveData<>();
+    private final MutableLiveData<State> state = new MutableLiveData<>();
     private final SoccerNewsApi soccerNewsApi;
 
     public NewsViewModel() {
@@ -34,25 +42,30 @@ public class NewsViewModel extends ViewModel {
     }
 
     private void findNews() {
+        state.setValue(State.DOING);
         soccerNewsApi.getNews().enqueue(new Callback<List<News>>() {
             @Override
             public void onResponse(Call<List<News>> call, Response<List<News>> response) {
                 if (response.isSuccessful()) {
                     mNews.setValue(response.body());
-                    Log.d("newsnews", response.body().toString());
+                    state.setValue(State.DONE);
                 } else {
-                    //TODO pensar em uma estratégia de tratamento de erros
+                    state.setValue(State.ERROR);
                 }
             }
 
             @Override
             public void onFailure(Call<List<News>> call, Throwable t) {
-                //TODO pensar em uma estratégia de tratamento de erros
+                state.setValue(State.ERROR);
             }
         });
     }
 
     public LiveData<List<News>> getNews() {
         return mNews;
+    }
+
+    public LiveData<State> getState() {
+        return this.state;
     }
 }

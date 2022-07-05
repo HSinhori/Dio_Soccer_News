@@ -4,13 +4,18 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
+import net.heedstudio.soccernews.MainActivity;
 import net.heedstudio.soccernews.databinding.FragmentFavoritesBinding;
+import net.heedstudio.soccernews.domain.News;
+import net.heedstudio.soccernews.ui.adapter.NewsAdapter;
+
+import java.util.List;
 
 public class FavoritesFragment extends Fragment {
 
@@ -22,11 +27,22 @@ public class FavoritesFragment extends Fragment {
                 new ViewModelProvider(this).get(FavoritesViewModel.class);
 
         binding = FragmentFavoritesBinding.inflate(inflater, container, false);
-        View root = binding.getRoot();
 
-        final TextView textView = binding.textDashboard;
-        dashboardViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
-        return root;
+        loadFavoriteNews();
+
+        return binding.getRoot();
+    }
+
+    private void loadFavoriteNews() {
+        MainActivity activity = (MainActivity) getActivity();
+        if(activity != null) {
+            List<News> favoriteNews = activity.getDB().newsDao().loadFavoriteNews();
+            binding.rvFavorites.setLayoutManager(new LinearLayoutManager(getContext()));
+            binding.rvFavorites.setAdapter(new NewsAdapter(favoriteNews, updateNews -> {
+                activity.getDB().newsDao().save(updateNews);
+                loadFavoriteNews();
+            }));
+        }
     }
 
     @Override
